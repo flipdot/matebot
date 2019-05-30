@@ -94,7 +94,7 @@ bot.command('stats', (ctx) => {
       return `${key} drank ${user.count} bottles.`;
     });
 
-    ctx.reply(`===== Stats =====\n${reply.join('\n')}`);
+    ctx.reply(`STATS\n${reply.join('\n')}`);
   }
 });
 
@@ -113,7 +113,7 @@ bot.command('log', (ctx) => {
 
   if (user) {
     const logText = user.log.map(log => `${log.time} by ${log.by}`).join('\n');
-    ctx.reply(`===== Log of ${username} =====\n${logText}`);
+    ctx.reply(`LOG OF ${username.toUpperCase()}\n${logText}`);
   } else {
     ctx.reply(`User not found: ${username}`);
     debug('User not found.', { username, ctx });
