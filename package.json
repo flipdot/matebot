@@ -1,0 +1,13 @@
+{
+  "name": "fd-matebot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "flat-cache": "^2.0.1",
+    "telegraf": "^3.29.0"
+  }
+}

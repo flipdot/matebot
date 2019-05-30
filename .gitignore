@@ -1,0 +1,9 @@
+# NPM
+node_modules
+
+# Config
+/config.json
+/config.js
+
+# Database
+/data
