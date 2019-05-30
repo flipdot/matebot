@@ -33,14 +33,14 @@ bot.command('drink', (ctx) => {
 
   const username = params[1] || ctx.from.username;
   if(!username) {
-    ctx.reply(`Internal Error: Username missing.`);
+    ctx.reply(`😵 Internal Error: Username missing.`);
     error('Username missing', { ctx });
     return;
   }
 
   const by = ctx.from.username;
   if (!by) {
-    ctx.reply(`Internal Error: Logging user missing.`);
+    ctx.reply(`😵 Internal Error: Logging user missing.`);
     error('Logging user missing', { ctx });
     return;
   }
@@ -71,7 +71,7 @@ bot.command('drink', (ctx) => {
   users.setKey(username, user);
   users.save(true);
 
-  ctx.reply(`${username} drank a bottle. Total: ${user.count}`);
+  ctx.reply(`🍺 ${username} drank a bottle. Total: ${user.count}`);
 });
 
 bot.command('stats', (ctx) => {
@@ -84,7 +84,7 @@ bot.command('stats', (ctx) => {
     if (user) {
       ctx.reply(`${username} drank ${user.count} bottles in total.`);
     } else {
-      ctx.reply(`User not found: ${username}`);
+      ctx.reply(`😕 User not found: ${username}`);
       debug('User not found.', { username, ctx });
     }
   } else {
@@ -94,7 +94,7 @@ bot.command('stats', (ctx) => {
       return `${key} drank ${user.count} bottles.`;
     });
 
-    ctx.reply(`STATS\n${reply.join('\n')}`);
+    ctx.reply(`📈 STATS\n${reply.join('\n')}`);
   }
 });
 
@@ -104,7 +104,7 @@ bot.command('log', (ctx) => {
   const username = params[1] || ctx.from.username;
 
   if(!username) {
-    ctx.reply(`Internal Error: Username missing.`);
+    ctx.reply(`😵 Internal Error: Username missing.`);
     error('Username missing', { ctx });
     return;
   }
@@ -113,9 +113,9 @@ bot.command('log', (ctx) => {
 
   if (user) {
     const logText = user.log.map(log => `${log.time} by ${log.by}`).join('\n');
-    ctx.reply(`LOG OF ${username.toUpperCase()}\n${logText}`);
+    ctx.reply(`📋 LOG OF ${username.toUpperCase()}\n${logText}`);
   } else {
-    ctx.reply(`User not found: ${username}`);
+    ctx.reply(`😕 User not found: ${username}`);
     debug('User not found.', { username, ctx });
   }
 });
