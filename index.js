@@ -22,7 +22,7 @@ function log(level, message, meta = {}) {
   console.log(JSON.stringify({ ...meta, time: new Date().toISOString(), level, message}, null, null));
 }
 
-const usageText = '/drink username - Drink a bottle\n/stats [username] - Show user\'s stats or all\n/log username - Show log of user';
+const usageText = '/drink [username] - Drink a bottle\n/stats [username] - Show user\'s stats or all\n/log username - Show log of user';
 
 const bot = new Telegraf(config.token)
 bot.start((ctx) => ctx.reply(usageText));
