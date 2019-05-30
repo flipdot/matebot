@@ -82,7 +82,7 @@ bot.command('stats', (ctx) => {
     const user = users.getKey(username);
 
     if (user) {
-      ctx.reply(`${username} drank ${user.count} bottles in total.`);
+      ctx.reply(`📈 ${username} drank ${user.count} bottles in total.`);
     } else {
       ctx.reply(`😕 User not found: ${username}`);
       debug('User not found.', { username, ctx });
