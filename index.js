@@ -1,5 +1,6 @@
 const path = require('path');
 const Telegraf = require('telegraf');
+const { Extra } = require('telegraf');
 const flatCache = require('flat-cache')
 
 const config = require('./config');
@@ -38,6 +39,19 @@ bot.command('drink', (ctx) => {
     return;
   }
 
+  ctx.reply(`❓ What did ${username} drink?`, Extra.markup((markup) => {
+    return markup.inlineKeyboard([
+      markup.callbackButton('🥤 Mate', `drink mate ${username}`),
+      markup.callbackButton('🍹 Tschunk', `drink tschunk ${username}`),
+    ])
+  }));
+});
+
+bot.action(/drink (.+) (.+)/, (ctx) => {
+  console.log(ctx.match);
+  const drink = ctx.match[1];
+  const username = ctx.match[2];
+
   const by = ctx.from.username;
   if (!by) {
     ctx.reply(`😵 Internal Error: Logging user missing.`);
@@ -47,8 +61,22 @@ bot.command('drink', (ctx) => {
 
   const user = users.getKey(username) || {};
 
+  // legacy
   if (user.count == null) {
     user.count = 0;
+  }
+
+
+  if (user.counts == null) {
+    if (user.count > 0) {
+      // handle legacy
+      user.counts = {
+        // fill mate with legacy count, since this was the only option before
+        mate: user.count,
+      };
+    } else {
+      user.counts = {};
+    }
   }
 
   if (user.log == null) {
@@ -58,20 +86,31 @@ bot.command('drink', (ctx) => {
   user.log.push({
     time: new Date().toISOString(),
     by,
+    drink,
   });
 
   info('Bottle drunk', {
     by,
     username,
     time: new Date().toISOString(),
+    drink,
   });
 
-  user.count += 1;
+  if (user.counts[drink] == null) {
+    user.counts[drink] = 0;
+  }
+
+  user.counts[drink] += 1;
 
   users.setKey(username, user);
   users.save(true);
 
-  ctx.reply(`🍺 ${username} drank a bottle. Total: ${user.count}`);
+
+  if (by === username) {
+    ctx.reply(`🍺 ${username} drank a ${drink}. Total: ${userStats(user)}`);
+  } else {
+    ctx.reply(`🍺 ${by} says ${username} drank a ${drink}. Total: ${userStats(user)}`);
+  }
 });
 
 bot.command('stats', (ctx) => {
@@ -82,7 +121,7 @@ bot.command('stats', (ctx) => {
     const user = users.getKey(username);
 
     if (user) {
-      ctx.reply(`📈 ${username} drank ${user.count} bottles in total.`);
+      ctx.reply(`📈 ${username} drank: ${userStats(user)}`);
     } else {
       ctx.reply(`😕 User not found: ${username}`);
       debug('User not found.', { username, ctx });
@@ -91,12 +130,22 @@ bot.command('stats', (ctx) => {
     const allUsers = users.all();
     const reply = Object.keys(allUsers).map(key => {
       const user = allUsers[key];
-      return `${key} drank ${user.count} bottles.`;
+      return `${key}: ${userStats(user)}`;
     });
 
     ctx.reply(`📈 STATS\n${reply.join('\n')}`);
   }
 });
+
+function userStats(user) {
+  // handle legacy stuff
+  const counts = user.counts || { mate: user.count };
+
+  return Object.keys(counts).map((key) => {
+    const value = counts[key];
+    return `${value} ${key}`;
+  }).join(', ');
+}
 
 bot.command('log', (ctx) => {
   const params = ctx.message.text.split(" ");
@@ -112,7 +161,7 @@ bot.command('log', (ctx) => {
   const user = users.getKey(username);
 
   if (user) {
-    const logText = user.log.map(log => `${log.time} by ${log.by}`).join('\n');
+    const logText = user.log.map(log => `${log.drink || 'mate'} - ${log.time} by ${log.by}`).join('\n');
     ctx.reply(`📋 LOG OF ${username.toUpperCase()}\n${logText}`);
   } else {
     ctx.reply(`😕 User not found: ${username}`);
