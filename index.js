@@ -1,53 +1,63 @@
-const path = require('path');
-const Telegraf = require('telegraf');
-const { Extra } = require('telegraf');
-const flatCache = require('flat-cache')
+const path = require("path");
+const Telegraf = require("telegraf");
+const { Extra } = require("telegraf");
+const flatCache = require("flat-cache");
 
-const config = require('./config');
+const config = require("./config");
 
-const users = flatCache.load('users', path.resolve('./data'));
+const users = flatCache.load("users", path.resolve("./data"));
 
 function info(message, meta = {}) {
-  log('info', message, meta);
+  log("info", message, meta);
 }
 
 function error(message, meta = {}) {
-  log('error', message, meta);
+  log("error", message, meta);
 }
 
 function debug(message, meta = {}) {
-  log('debug', message, meta);
+  log("debug", message, meta);
 }
 
 function log(level, message, meta = {}) {
-  console.log(JSON.stringify({ ...meta, time: new Date().toISOString(), level, message}, null, null));
+  console.log(
+    JSON.stringify(
+      { ...meta, time: new Date().toISOString(), level, message },
+      null,
+      null
+    )
+  );
 }
 
-const usageText = '/drink [username] - Drink a bottle\n/stats [username] - Show user\'s stats or all\n/log username - Show log of user';
+const usageText =
+  "/drink [username] - Drink a bottle\n/stats [username] - Show user's stats or all\n/log username - Show log of user";
 
-const bot = new Telegraf(config.token)
-bot.start((ctx) => ctx.reply(usageText));
-bot.help((ctx) => ctx.reply(usageText))
+const bot = new Telegraf(config.token);
+bot.start(ctx => ctx.reply(usageText));
+bot.help(ctx => ctx.reply(usageText));
 
-bot.command('drink', (ctx) => {
+bot.command("drink", ctx => {
   const params = ctx.message.text.split(" ");
 
   const username = params[1] || ctx.from.username;
-  if(!username) {
+  if (!username) {
     ctx.reply(`😵 Internal Error: Username missing.`);
-    error('Username missing', { ctx });
+    error("Username missing", { ctx });
     return;
   }
 
-  ctx.reply(`❓ What did ${username} drink?`, Extra.markup((markup) => {
-    return markup.inlineKeyboard([
-      markup.callbackButton('🥤 Mate', `drink mate ${username}`),
-      markup.callbackButton('🍹 Tschunk', `drink tschunk ${username}`),
-    ])
-  }));
+  ctx.reply(
+    `❓ What did ${username} drink?`,
+    Extra.markup(markup => {
+      return markup.inlineKeyboard([
+        markup.callbackButton("🥤 Mate", `drink mate ${username}`),
+        markup.callbackButton("🍹 Tschunk", `drink tschunk ${username}`)
+      ]);
+    })
+  );
 });
 
-bot.action(/drink (.+) (.+)/, (ctx) => {
+bot.action(/drink (.+) (.+)/, ctx => {
   console.log(ctx.match);
   const drink = ctx.match[1];
   const username = ctx.match[2];
@@ -55,7 +65,7 @@ bot.action(/drink (.+) (.+)/, (ctx) => {
   const by = ctx.from.username;
   if (!by) {
     ctx.reply(`😵 Internal Error: Logging user missing.`);
-    error('Logging user missing', { ctx });
+    error("Logging user missing", { ctx });
     return;
   }
 
@@ -66,13 +76,12 @@ bot.action(/drink (.+) (.+)/, (ctx) => {
     user.count = 0;
   }
 
-
   if (user.counts == null) {
     if (user.count > 0) {
       // handle legacy
       user.counts = {
         // fill mate with legacy count, since this was the only option before
-        mate: user.count,
+        mate: user.count
       };
     } else {
       user.counts = {};
@@ -86,14 +95,14 @@ bot.action(/drink (.+) (.+)/, (ctx) => {
   user.log.push({
     time: new Date().toISOString(),
     by,
-    drink,
+    drink
   });
 
-  info('Bottle drunk', {
+  info("Bottle drunk", {
     by,
     username,
     time: new Date().toISOString(),
-    drink,
+    drink
   });
 
   if (user.counts[drink] == null) {
@@ -105,26 +114,27 @@ bot.action(/drink (.+) (.+)/, (ctx) => {
   users.setKey(username, user);
   users.save(true);
 
-
   if (by === username) {
     ctx.reply(`🍺 ${username} drank a ${drink}. Total: ${userStats(user)}`);
   } else {
-    ctx.reply(`🍺 ${by} says ${username} drank a ${drink}. Total: ${userStats(user)}`);
+    ctx.reply(
+      `🍺 ${by} says ${username} drank a ${drink}. Total: ${userStats(user)}`
+    );
   }
 });
 
-bot.command('stats', (ctx) => {
+bot.command("stats", ctx => {
   const params = ctx.message.text.split(" ");
 
   const username = params[1];
-  if(username) {
+  if (username) {
     const user = users.getKey(username);
 
     if (user) {
       ctx.reply(`📈 ${username} drank: ${userStats(user)}`);
     } else {
       ctx.reply(`😕 User not found: ${username}`);
-      debug('User not found.', { username, ctx });
+      debug("User not found.", { username, ctx });
     }
   } else {
     const allUsers = users.all();
@@ -133,7 +143,7 @@ bot.command('stats', (ctx) => {
       return `${key}: ${userStats(user)}`;
     });
 
-    ctx.reply(`📈 STATS\n${reply.join('\n')}`);
+    ctx.reply(`📈 STATS\n${reply.join("\n")}`);
   }
 });
 
@@ -141,32 +151,36 @@ function userStats(user) {
   // handle legacy stuff
   const counts = user.counts || { mate: user.count };
 
-  return Object.keys(counts).map((key) => {
-    const value = counts[key];
-    return `${value} ${key}`;
-  }).join(', ');
+  return Object.keys(counts)
+    .map(key => {
+      const value = counts[key];
+      return `${value} ${key}`;
+    })
+    .join(", ");
 }
 
-bot.command('log', (ctx) => {
+bot.command("log", ctx => {
   const params = ctx.message.text.split(" ");
 
   const username = params[1] || ctx.from.username;
 
-  if(!username) {
+  if (!username) {
     ctx.reply(`😵 Internal Error: Username missing.`);
-    error('Username missing', { ctx });
+    error("Username missing", { ctx });
     return;
   }
 
   const user = users.getKey(username);
 
   if (user) {
-    const logText = user.log.map(log => `${log.drink || 'mate'} - ${log.time} by ${log.by}`).join('\n');
+    const logText = user.log
+      .map(log => `${log.drink || "mate"} - ${log.time} by ${log.by}`)
+      .join("\n");
     ctx.reply(`📋 LOG OF ${username.toUpperCase()}\n${logText}`);
   } else {
     ctx.reply(`😕 User not found: ${username}`);
-    debug('User not found.', { username, ctx });
+    debug("User not found.", { username, ctx });
   }
 });
 
-bot.launch()
+bot.launch();
