@@ -58,7 +58,6 @@ bot.command("drink", ctx => {
 });
 
 bot.action(/drink (.+) (.+)/, ctx => {
-  console.log(ctx.match);
   const drink = ctx.match[1];
   const username = ctx.match[2];
 
