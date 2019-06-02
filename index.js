@@ -61,6 +61,11 @@ bot.action(/drink (.+) (.+)/, ctx => {
   const drink = ctx.match[1];
   const username = ctx.match[2];
 
+  if (ctx.callbackQuery.from.id !== ctx.from.id) {
+    ctx.reply(`You can only reply to your own /drink.`);
+    return;
+  }
+
   const by = ctx.from.username;
   if (!by) {
     ctx.reply(`😵 Internal Error: Logging user missing.`);
