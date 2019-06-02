@@ -57,14 +57,12 @@ bot.command("drink", ctx => {
   );
 });
 
-bot.action(/drink (.+) (.+)/, ctx => {
+bot.action(/drink (.+) (.+)/, async ctx => {
   const drink = ctx.match[1];
   const username = ctx.match[2];
 
-  if (ctx.callbackQuery.from.id !== ctx.from.id) {
-    ctx.reply(`You can only reply to your own /drink.`);
-    return;
-  }
+  // delete message (fake one time button)
+  await ctx.telegram.deleteMessage(ctx.callbackQuery.message.chat.id, ctx.callbackQuery.message.message_id);
 
   const by = ctx.from.username;
   if (!by) {
